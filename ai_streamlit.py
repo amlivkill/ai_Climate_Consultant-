@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
-from datetime import datetime
+import base64
+from io import BytesIO
+import requests
 
-# Page Configuration
+# Page Configuration with SEO
 st.set_page_config(
     page_title="CHANGE Uttarakhand - Sustainable Agriculture & Environment",
     page_icon="🌱",
@@ -12,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for Modern Design
+# Custom CSS for Modern Design with Logo support
 st.markdown("""
 <style>
     /* Main Styles */
@@ -20,30 +21,46 @@ st.markdown("""
         background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     }
     
-    /* Header Styles */
+    /* Header with Logo */
     .header-container {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
-        padding: 1.5rem 0;
+        padding: 1rem 0;
         border-bottom: 3px solid #2E8B57;
         box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+    }
+    
+    .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .logo-img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #2E8B57;
     }
     
     .logo-title {
-        font-size: 3rem;
+        font-size: 2.5rem;
         font-weight: 800;
         background: linear-gradient(45deg, #2E8B57, #3CB371);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-align: center;
         margin: 0;
         font-family: 'Arial Black', sans-serif;
     }
     
     .tagline {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         color: #666;
-        text-align: center;
         font-weight: 300;
         margin-top: 0.5rem;
         font-style: italic;
@@ -53,25 +70,40 @@ st.markdown("""
     .hero-section {
         background: linear-gradient(135deg, #2E8B57 0%, #3CB371 100%);
         color: white;
-        padding: 5rem 2rem;
+        padding: 4rem 2rem;
         text-align: center;
         border-radius: 20px;
         margin: 2rem 0;
         box-shadow: 0 10px 30px rgba(46, 139, 87, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+        background-size: cover;
     }
     
     .hero-title {
-        font-size: 3.5rem;
+        font-size: 3.2rem;
         font-weight: 800;
         margin-bottom: 1rem;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        position: relative;
     }
     
     .hero-subtitle {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         font-weight: 300;
         margin-bottom: 2rem;
         opacity: 0.9;
+        position: relative;
     }
     
     /* Card Styles */
@@ -113,6 +145,9 @@ st.markdown("""
         border-radius: 15px;
         margin: 1rem 0;
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        position: sticky;
+        top: 10px;
+        z-index: 100;
     }
     
     .nav-btn {
@@ -125,6 +160,7 @@ st.markdown("""
         font-weight: 600;
         transition: all 0.3s ease;
         cursor: pointer;
+        font-size: 0.9rem;
     }
     
     .nav-btn:hover {
@@ -135,12 +171,12 @@ st.markdown("""
     /* Section Headers */
     .section-header {
         text-align: center;
-        margin: 4rem 0 2rem 0;
+        margin: 3rem 0 2rem 0;
         padding: 2rem 0;
     }
     
     .section-title {
-        font-size: 2.8rem;
+        font-size: 2.5rem;
         font-weight: 700;
         color: #2E8B57;
         margin-bottom: 1rem;
@@ -160,7 +196,7 @@ st.markdown("""
     }
     
     .section-subtitle {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         color: #666;
         max-width: 700px;
         margin: 0 auto;
@@ -186,6 +222,13 @@ st.markdown("""
         margin: 2rem 0;
         text-align: center;
         box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); }
     }
     
     /* Footer */
@@ -195,13 +238,6 @@ st.markdown("""
         padding: 3rem 0;
         margin-top: 4rem;
         border-radius: 20px 20px 0 0;
-    }
-    
-    /* Hindi Text */
-    .hindi-text {
-        font-family: 'Arial Unicode MS', 'Nirmala UI', sans-serif;
-        line-height: 1.8;
-        font-size: 1.1rem;
     }
     
     /* Progress Bar */
@@ -218,21 +254,62 @@ st.markdown("""
         border-radius: 10px;
         transition: width 0.5s ease;
     }
+    
+    /* Logo in Nav */
+    .nav-logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #2E8B57;
+        margin-right: 10px;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .logo-title { font-size: 2rem; }
+        .hero-title { font-size: 2.2rem; }
+        .section-title { font-size: 2rem; }
+        .nav-btn { 
+            width: 100%; 
+            margin: 0.2rem 0;
+            font-size: 0.8rem;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# Header Section
-st.markdown("""
+# Function to create base64 encoded logo (placeholder)
+def get_base64_logo():
+    # Create a simple SVG logo as base64
+    logo_svg = """
+    <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="40" fill="#2E8B57" opacity="0.8"/>
+        <path d="M30,40 L50,20 L70,40 L60,40 L60,70 L40,70 L40,40 Z" fill="white"/>
+        <circle cx="50" cy="35" r="8" fill="#3CB371"/>
+    </svg>
+    """
+    return base64.b64encode(logo_svg.encode()).decode()
+
+# Header Section with Logo
+logo_base64 = get_base64_logo()
+st.markdown(f"""
 <div class="header-container">
-    <div class="logo-title">🌿 CHANGE</div>
-    <div class="tagline">Centre for Himalaya Agriculture and Nature Group of Environment</div>
+    <div class="logo-container">
+        <img src="data:image/svg+xml;base64,{logo_base64}" class="logo-img" alt="CHANGE Logo">
+        <div>
+            <div class="logo-title">🌿 CHANGE</div>
+            <div class="tagline">Centre for Himalaya Agriculture and Nature Group of Environment</div>
+        </div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Navigation with JavaScript for smooth scrolling
+# Navigation with Smooth Scrolling
 st.markdown("""
 <div class="nav-container">
-    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;">
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; align-items: center;">
+        <img src="data:image/svg+xml;base64,{}" class="nav-logo" alt="Logo">
         <button class="nav-btn" onclick="scrollToSection('home')">🏠 Home</button>
         <button class="nav-btn" onclick="scrollToSection('about')">👥 About</button>
         <button class="nav-btn" onclick="scrollToSection('programs')">🚀 Programs</button>
@@ -247,11 +324,11 @@ st.markdown("""
 function scrollToSection(sectionId) {
     const element = document.getElementById(sectionId);
     if (element) {
-        element.scrollIntoView({behavior: "smooth"});
+        element.scrollIntoView({behavior: "smooth", block: "start"});
     }
 }
 </script>
-""", unsafe_allow_html=True)
+""".format(logo_base64), unsafe_allow_html=True)
 
 # Home Section
 st.markdown('<div id="home"></div>', unsafe_allow_html=True)
@@ -259,7 +336,7 @@ st.markdown("""
 <div class="hero-section">
     <h1 class="hero-title">Transforming Rural Uttarakhand</h1>
     <p class="hero-subtitle">Sustainable Agriculture • Environmental Stewardship • Community Empowerment</p>
-    <div style="margin-top: 3rem;">
+    <div style="margin-top: 3rem; position: relative;">
         <button class="nav-btn" style="font-size: 1.2rem; padding: 1rem 2rem; margin: 0.5rem;" onclick="scrollToSection('about')">Explore Our Mission</button>
         <button class="nav-btn" style="font-size: 1.2rem; padding: 1rem 2rem; margin: 0.5rem; background: rgba(255,255,255,0.2); border: 2px solid white;" onclick="scrollToSection('contact')">Join Our Movement</button>
     </div>
@@ -457,7 +534,6 @@ with tab2:
         soil_moisture = st.slider("Current Soil Moisture Level (%)", 0, 100, 50)
     
     if st.button("Calculate Water Optimization", use_container_width=True):
-        # Simple calculation for demonstration
         base_water = crop_area * 1500
         if irrigation_type == "Drip Irrigation":
             water_saved = base_water * 0.4
@@ -496,13 +572,12 @@ with tab3:
         practice_years = st.number_input("Years of Sustainable Practice", min_value=1, value=3)
     
     if st.button("Estimate Carbon Credit Income", use_container_width=True):
-        # Simple carbon credit calculation
-        base_credits = land_area * 2  # 2 credits per hectare
-        tree_credits = trees_planted * 0.1  # 0.1 credits per tree
-        practice_bonus = practice_years * 0.5  # Bonus for sustained practice
+        base_credits = land_area * 2
+        tree_credits = trees_planted * 0.1
+        practice_bonus = practice_years * 0.5
         
         total_credits = base_credits + tree_credits + practice_bonus
-        income = total_credits * 15  # $15 per credit
+        income = total_credits * 15
         
         st.success(f"💰 **Carbon Credit Analysis:**")
         col1, col2, col3 = st.columns(3)
@@ -532,7 +607,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Climate Statistics with Matplotlib
+# Climate Statistics
 st.markdown("""
 <div class="section-header">
     <h2 class="section-title">Climate Impact Analysis</h2>
@@ -540,7 +615,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Create sample data for visualization
+# Create sample climate data
 climate_data = {
     'Disaster Type': ['Cloudburst', 'Landslide', 'Floods', 'Drought', 'Others'],
     'Events': [700, 1034, 300, 100, 65],
@@ -571,7 +646,6 @@ with col2:
     bars = ax.barh(df_climate['Disaster Type'], df_climate['Impact Score'], 
                    color=colors, alpha=0.8)
     
-    # Add value labels on bars
     for bar, value in zip(bars, df_climate['Impact Score']):
         ax.text(bar.get_width() + 1, bar.get_y() + bar.get_height()/2, 
                 f'{value}%', va='center', fontweight='bold')
@@ -580,27 +654,6 @@ with col2:
     ax.set_title('Disaster Impact Severity', fontsize=14, fontweight='bold', pad=20)
     ax.grid(axis='x', alpha=0.3)
     st.pyplot(fig)
-
-# Progress Bars for Climate Metrics
-st.subheader("Climate Risk Metrics")
-metrics = [
-    {"name": "Extreme Weather Days", "value": 65, "max": 100},
-    {"name": "Disaster Frequency", "value": 75, "max": 100},
-    {"name": "Community Preparedness", "value": 40, "max": 100},
-    {"name": "Infrastructure Resilience", "value": 35, "max": 100}
-]
-
-for metric in metrics:
-    st.write(f"**{metric['name']}**")
-    progress = (metric['value'] / metric['max']) * 100
-    st.markdown(f"""
-    <div class="progress-container">
-        <div class="progress-bar" style="width: {progress}%"></div>
-    </div>
-    <div style="text-align: right; margin-top: 5px; color: #666;">
-        {metric['value']}%
-    </div>
-    """, unsafe_allow_html=True)
 
 # Products Section
 st.markdown('<div id="products"></div>', unsafe_allow_html=True)
@@ -713,7 +766,10 @@ with col2:
 st.markdown("""
 <div class="footer">
     <div style="text-align: center;">
-        <h3 style="color: white; margin-bottom: 1rem; font-size: 2rem;">🌿 CHANGE Cooperative</h3>
+        <div class="logo-container" style="justify-content: center; margin-bottom: 1rem;">
+            <img src="data:image/svg+xml;base64,{}" class="logo-img" alt="CHANGE Logo">
+            <h3 style="color: white; margin: 0; font-size: 2rem;">🌿 CHANGE Cooperative</h3>
+        </div>
         <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 2rem;">Empowering Rural Uttarakhand through Sustainable Development</p>
         
         <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap;">
@@ -729,7 +785,7 @@ st.markdown("""
         </div>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""".format(logo_base64), unsafe_allow_html=True)
 
 # SEO Meta Tags
 st.markdown("""
@@ -737,4 +793,31 @@ st.markdown("""
 <meta name="description" content="CHANGE Uttarakhand - Sustainable agriculture, environmental conservation, and community empowerment in the Himalayas. Organic farming, AI climate solutions, rural development.">
 <meta name="keywords" content="Uttarakhand agriculture, sustainable farming, climate change, AI consultant, organic products, rural development, Himalayas, CHANGE cooperative">
 <meta name="author" content="CHANGE Cooperative">
-""", unsafe_allow_html=True)
+<meta property="og:title" content="CHANGE Uttarakhand - Sustainable Agriculture & Environment">
+<meta property="og:description" content="Empowering rural communities through sustainable agriculture and environmental conservation in Uttarakhand">
+<meta property="og:type" content="website">
+<!-- Structured Data for SEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "CHANGE Uttarakhand",
+  "description": "Centre for Himalaya Agriculture and Nature Group of Environment",
+  "url": "https://change-uttarakhand.streamlit.app",
+  "logo": "data:image/svg+xml;base64,{}",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Tehri Garhwal",
+    "addressRegion": "Uttarakhand",
+    "postalCode": "249199",
+    "addressCountry": "IN"
+  },
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+91-7668512325",
+    "contactType": "Customer service",
+    "email": "thechangeuttarakhand@gmail.com"
+  }
+}
+</script>
+""".format(logo_base64), unsafe_allow_html=True)
