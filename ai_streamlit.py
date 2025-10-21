@@ -3,7 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
-import requests
 
 # Page Configuration with SEO
 st.set_page_config(
@@ -13,273 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for Modern Design with Logo support
-st.markdown("""
-<style>
-    /* Main Styles */
-    .main {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    }
-    
-    /* Header with Logo */
-    .header-container {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        padding: 1rem 0;
-        border-bottom: 3px solid #2E8B57;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 20px;
-    }
-    
-    .logo-container {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-    
-    .logo-img {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid #2E8B57;
-    }
-    
-    .logo-title {
-        font-size: 2.5rem;
-        font-weight: 800;
-        background: linear-gradient(45deg, #2E8B57, #3CB371);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin: 0;
-        font-family: 'Arial Black', sans-serif;
-    }
-    
-    .tagline {
-        font-size: 1.2rem;
-        color: #666;
-        font-weight: 300;
-        margin-top: 0.5rem;
-        font-style: italic;
-    }
-    
-    /* Hero Section */
-    .hero-section {
-        background: linear-gradient(135deg, #2E8B57 0%, #3CB371 100%);
-        color: white;
-        padding: 4rem 2rem;
-        text-align: center;
-        border-radius: 20px;
-        margin: 2rem 0;
-        box-shadow: 0 10px 30px rgba(46, 139, 87, 0.3);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .hero-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
-        background-size: cover;
-    }
-    
-    .hero-title {
-        font-size: 3.2rem;
-        font-weight: 800;
-        margin-bottom: 1rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        position: relative;
-    }
-    
-    .hero-subtitle {
-        font-size: 1.4rem;
-        font-weight: 300;
-        margin-bottom: 2rem;
-        opacity: 0.9;
-        position: relative;
-    }
-    
-    /* Card Styles */
-    .feature-card {
-        background: white;
-        padding: 2rem;
-        border-radius: 15px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        border-top: 4px solid #2E8B57;
-        transition: all 0.3s ease;
-        height: 100%;
-        text-align: center;
-    }
-    
-    .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-    }
-    
-    .stat-card {
-        background: linear-gradient(135deg, #2E8B57, #3CB371);
-        color: white;
-        padding: 2rem;
-        border-radius: 15px;
-        text-align: center;
-        box-shadow: 0 8px 25px rgba(46, 139, 87, 0.3);
-        transition: transform 0.3s ease;
-    }
-    
-    .stat-card:hover {
-        transform: scale(1.05);
-    }
-    
-    /* Navigation */
-    .nav-container {
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(10px);
-        padding: 1rem;
-        border-radius: 15px;
-        margin: 1rem 0;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        position: sticky;
-        top: 10px;
-        z-index: 100;
-    }
-    
-    .nav-btn {
-        background: linear-gradient(45deg, #2E8B57, #3CB371);
-        color: white;
-        border: none;
-        padding: 0.8rem 1.5rem;
-        border-radius: 25px;
-        margin: 0.3rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        font-size: 0.9rem;
-    }
-    
-    .nav-btn:hover {
-        transform: scale(1.05);
-        box-shadow: 0 5px 15px rgba(46, 139, 87, 0.4);
-    }
-    
-    /* Section Headers */
-    .section-header {
-        text-align: center;
-        margin: 3rem 0 2rem 0;
-        padding: 2rem 0;
-    }
-    
-    .section-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #2E8B57;
-        margin-bottom: 1rem;
-        position: relative;
-    }
-    
-    .section-title::after {
-        content: '';
-        position: absolute;
-        bottom: -10px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100px;
-        height: 4px;
-        background: linear-gradient(45deg, #2E8B57, #3CB371);
-        border-radius: 2px;
-    }
-    
-    .section-subtitle {
-        font-size: 1.2rem;
-        color: #666;
-        max-width: 700px;
-        margin: 0 auto;
-        line-height: 1.6;
-    }
-    
-    /* AI Section */
-    .ai-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 3rem;
-        border-radius: 20px;
-        margin: 2rem 0;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-    }
-    
-    /* Climate Alert */
-    .climate-alert {
-        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-        color: white;
-        padding: 2rem;
-        border-radius: 15px;
-        margin: 2rem 0;
-        text-align: center;
-        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
-        animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.02); }
-        100% { transform: scale(1); }
-    }
-    
-    /* Footer */
-    .footer {
-        background: linear-gradient(135deg, #2c3e50, #34495e);
-        color: white;
-        padding: 3rem 0;
-        margin-top: 4rem;
-        border-radius: 20px 20px 0 0;
-    }
-    
-    /* Progress Bar */
-    .progress-container {
-        background: #f0f0f0;
-        border-radius: 10px;
-        margin: 1rem 0;
-        overflow: hidden;
-    }
-    
-    .progress-bar {
-        background: linear-gradient(45deg, #2E8B57, #3CB371);
-        height: 20px;
-        border-radius: 10px;
-        transition: width 0.5s ease;
-    }
-    
-    /* Logo in Nav */
-    .nav-logo {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #2E8B57;
-        margin-right: 10px;
-    }
-    
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-        .logo-title { font-size: 2rem; }
-        .hero-title { font-size: 2.2rem; }
-        .section-title { font-size: 2rem; }
-        .nav-btn { 
-            width: 100%; 
-            margin: 0.2rem 0;
-            font-size: 0.8rem;
-        }
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Function to create base64 encoded logo (placeholder)
+# Function to create base64 encoded logo (FIXED)
 def get_base64_logo():
     # Create a simple SVG logo as base64
     logo_svg = """
@@ -291,8 +24,186 @@ def get_base64_logo():
     """
     return base64.b64encode(logo_svg.encode()).decode()
 
-# Header Section with Logo
+# Get logo base64 at the start
 logo_base64 = get_base64_logo()
+
+# Custom CSS for Modern Design with Logo support
+st.markdown(f"""
+<style>
+    /* Main Styles */
+    .main {{
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }}
+    
+    /* Header with Logo */
+    .header-container {{
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 1rem 0;
+        border-bottom: 3px solid #2E8B57;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+    }}
+    
+    .logo-container {{
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }}
+    
+    .logo-img {{
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #2E8B57;
+    }}
+    
+    .logo-title {{
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(45deg, #2E8B57, #3CB371);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+        font-family: 'Arial Black', sans-serif;
+    }}
+    
+    .tagline {{
+        font-size: 1.2rem;
+        color: #666;
+        font-weight: 300;
+        margin-top: 0.5rem;
+        font-style: italic;
+    }}
+    
+    /* Hero Section */
+    .hero-section {{
+        background: linear-gradient(135deg, #2E8B57 0%, #3CB371 100%);
+        color: white;
+        padding: 4rem 2rem;
+        text-align: center;
+        border-radius: 20px;
+        margin: 2rem 0;
+        box-shadow: 0 10px 30px rgba(46, 139, 87, 0.3);
+    }}
+    
+    .hero-title {{
+        font-size: 3.2rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }}
+    
+    .hero-subtitle {{
+        font-size: 1.4rem;
+        font-weight: 300;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }}
+    
+    /* Card Styles */
+    .feature-card {{
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border-top: 4px solid #2E8B57;
+        transition: all 0.3s ease;
+        height: 100%;
+        text-align: center;
+    }}
+    
+    .feature-card:hover {{
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }}
+    
+    .stat-card {{
+        background: linear-gradient(135deg, #2E8B57, #3CB371);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 8px 25px rgba(46, 139, 87, 0.3);
+    }}
+    
+    /* Navigation */
+    .nav-container {{
+        background: rgba(255, 255, 255, 0.98);
+        padding: 1rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }}
+    
+    .nav-btn {{
+        background: linear-gradient(45deg, #2E8B57, #3CB371);
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 25px;
+        margin: 0.3rem;
+        font-weight: 600;
+        cursor: pointer;
+    }}
+    
+    /* Section Headers */
+    .section-header {{
+        text-align: center;
+        margin: 3rem 0 2rem 0;
+        padding: 2rem 0;
+    }}
+    
+    .section-title {{
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2E8B57;
+        margin-bottom: 1rem;
+    }}
+    
+    .section-subtitle {{
+        font-size: 1.2rem;
+        color: #666;
+        max-width: 700px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }}
+    
+    /* AI Section */
+    .ai-section {{
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem;
+        border-radius: 20px;
+        margin: 2rem 0;
+    }}
+    
+    /* Climate Alert */
+    .climate-alert {{
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin: 2rem 0;
+        text-align: center;
+    }}
+    
+    /* Footer */
+    .footer {{
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        color: white;
+        padding: 3rem 0;
+        margin-top: 4rem;
+        border-radius: 20px 20px 0 0;
+    }}
+</style>
+""", unsafe_allow_html=True)
+
+# Header Section with Logo
 st.markdown(f"""
 <div class="header-container">
     <div class="logo-container">
@@ -305,11 +216,10 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Navigation with Smooth Scrolling
+# Navigation
 st.markdown("""
 <div class="nav-container">
-    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; align-items: center;">
-        <img src="data:image/svg+xml;base64,{}" class="nav-logo" alt="Logo">
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;">
         <button class="nav-btn" onclick="scrollToSection('home')">🏠 Home</button>
         <button class="nav-btn" onclick="scrollToSection('about')">👥 About</button>
         <button class="nav-btn" onclick="scrollToSection('programs')">🚀 Programs</button>
@@ -324,11 +234,11 @@ st.markdown("""
 function scrollToSection(sectionId) {
     const element = document.getElementById(sectionId);
     if (element) {
-        element.scrollIntoView({behavior: "smooth", block: "start"});
+        element.scrollIntoView({behavior: "smooth"});
     }
 }
 </script>
-""".format(logo_base64), unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # Home Section
 st.markdown('<div id="home"></div>', unsafe_allow_html=True)
@@ -336,7 +246,7 @@ st.markdown("""
 <div class="hero-section">
     <h1 class="hero-title">Transforming Rural Uttarakhand</h1>
     <p class="hero-subtitle">Sustainable Agriculture • Environmental Stewardship • Community Empowerment</p>
-    <div style="margin-top: 3rem; position: relative;">
+    <div style="margin-top: 3rem;">
         <button class="nav-btn" style="font-size: 1.2rem; padding: 1rem 2rem; margin: 0.5rem;" onclick="scrollToSection('about')">Explore Our Mission</button>
         <button class="nav-btn" style="font-size: 1.2rem; padding: 1rem 2rem; margin: 0.5rem; background: rgba(255,255,255,0.2); border: 2px solid white;" onclick="scrollToSection('contact')">Join Our Movement</button>
     </div>
@@ -460,25 +370,25 @@ for idx, program in enumerate(programs):
 st.markdown('<div id="ai-consultant"></div>', unsafe_allow_html=True)
 st.markdown("""
 <div class="ai-section">
-    <div class="section-header" style="color: white;">
-        <h2 class="section-title" style="color: white;">🤖 AI Climate Consultant</h2>
-        <p class="section-subtitle" style="color: rgba(255,255,255,0.9);">Advanced AI solutions for climate resilience and sustainable agriculture</p>
+    <div style="text-align: center; color: white;">
+        <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">🤖 AI Climate Consultant</h2>
+        <p style="font-size: 1.2rem; opacity: 0.9;">Advanced AI solutions for climate resilience and sustainable agriculture</p>
     </div>
     
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
-        <div style="background: rgba(255,255,255,0.15); padding: 2rem; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+        <div style="background: rgba(255,255,255,0.15); padding: 2rem; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2);">
             <h4>🌦️ Climate Risk Forecasting</h4>
-            <p>Real-time weather predictions and early warning systems for floods, landslides, and extreme weather events using AI algorithms.</p>
+            <p>Real-time weather predictions and early warning systems for floods, landslides, and extreme weather events.</p>
         </div>
         
-        <div style="background: rgba(255,255,255,0.15); padding: 2rem; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+        <div style="background: rgba(255,255,255,0.15); padding: 2rem; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2);">
             <h4>🌱 Smart Farming Solutions</h4>
-            <p>AI-powered crop recommendations, soil health analysis, and precision agriculture techniques for optimal yield.</p>
+            <p>AI-powered crop recommendations, soil health analysis, and precision agriculture techniques.</p>
         </div>
         
-        <div style="background: rgba(255,255,255,0.15); padding: 2rem; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+        <div style="background: rgba(255,255,255,0.15); padding: 2rem; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2);">
             <h4>💰 Carbon Credit Management</h4>
-            <p>Automated MRV systems for carbon credit generation and international market access with blockchain technology.</p>
+            <p>Automated systems for carbon credit generation and international market access.</p>
         </div>
     </div>
 </div>
@@ -531,7 +441,6 @@ with tab2:
         crop_type = st.selectbox("Crop Type", ["Cereals (Rice/Wheat)", "Millets", "Pulses", "Vegetables", "Fruits", "Spices"])
     with col2:
         irrigation_type = st.selectbox("Irrigation System", ["Flood Irrigation", "Drip Irrigation", "Sprinkler System", "Traditional Methods"])
-        soil_moisture = st.slider("Current Soil Moisture Level (%)", 0, 100, 50)
     
     if st.button("Calculate Water Optimization", use_container_width=True):
         base_water = crop_area * 1500
@@ -549,14 +458,6 @@ with tab2:
         st.metric("Current Water Usage", f"{base_water:,.0f} liters/day")
         st.metric("Potential Savings", f"{water_saved:,.0f} liters/day")
         st.metric("System Efficiency", efficiency)
-        
-        st.info("""
-        **💡 AI Recommendations:**
-        - Switch to drip irrigation for maximum efficiency
-        - Install soil moisture sensors
-        - Implement rainwater harvesting
-        - Use mulching to reduce evaporation
-        """)
 
 with tab3:
     st.subheader("Carbon Credit Income Calculator")
@@ -587,15 +488,6 @@ with tab3:
             st.metric("Annual Income", f"${income:,.0f}")
         with col3:
             st.metric("Credit Value", "$15/credit")
-        
-        st.info("""
-        **🌿 How to Increase Carbon Credits:**
-        - Plant more native trees
-        - Practice no-till farming
-        - Use organic manure
-        - Implement crop rotation
-        - Maintain soil cover
-        """)
 
 # Climate Section
 st.markdown('<div id="climate"></div>', unsafe_allow_html=True)
@@ -606,54 +498,6 @@ st.markdown("""
     <p style="font-size: 1.1rem; margin: 0;">Immediate AI-powered solutions needed for climate resilience in Himalayan region</p>
 </div>
 """, unsafe_allow_html=True)
-
-# Climate Statistics
-st.markdown("""
-<div class="section-header">
-    <h2 class="section-title">Climate Impact Analysis</h2>
-    <p class="section-subtitle">Understanding Uttarakhand's environmental challenges through data</p>
-</div>
-""", unsafe_allow_html=True)
-
-# Create sample climate data
-climate_data = {
-    'Disaster Type': ['Cloudburst', 'Landslide', 'Floods', 'Drought', 'Others'],
-    'Events': [700, 1034, 300, 100, 65],
-    'Impact Score': [85, 90, 75, 60, 40]
-}
-
-df_climate = pd.DataFrame(climate_data)
-
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("Disaster Distribution 2025")
-    fig, ax = plt.subplots(figsize=(8, 6))
-    colors = ['#ff6b6b', '#ffa726', '#42a5f5', '#66bb6a', '#ba68c8']
-    wedges, texts, autotexts = ax.pie(df_climate['Events'], labels=df_climate['Disaster Type'], 
-                                     autopct='%1.1f%%', colors=colors, startangle=90)
-    
-    for autotext in autotexts:
-        autotext.set_color('white')
-        autotext.set_fontweight('bold')
-    
-    ax.set_title('Disaster Events Distribution', fontsize=14, fontweight='bold', pad=20)
-    st.pyplot(fig)
-
-with col2:
-    st.subheader("Impact Severity Analysis")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    bars = ax.barh(df_climate['Disaster Type'], df_climate['Impact Score'], 
-                   color=colors, alpha=0.8)
-    
-    for bar, value in zip(bars, df_climate['Impact Score']):
-        ax.text(bar.get_width() + 1, bar.get_y() + bar.get_height()/2, 
-                f'{value}%', va='center', fontweight='bold')
-    
-    ax.set_xlabel('Impact Score (%)', fontweight='bold')
-    ax.set_title('Disaster Impact Severity', fontsize=14, fontweight='bold', pad=20)
-    ax.grid(axis='x', alpha=0.3)
-    st.pyplot(fig)
 
 # Products Section
 st.markdown('<div id="products"></div>', unsafe_allow_html=True)
@@ -684,7 +528,6 @@ for idx, product in enumerate(products):
             <div style="margin-top: 1rem; text-align: left;">
                 {' '.join([f'<span style="background: #2E8B57; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; margin: 0.2rem; display: inline-block;">{feature}</span>' for feature in product['features']])}
             </div>
-            <button class="nav-btn" style="margin-top: 1.5rem; width: 100%;" onclick="alert('{product['name']} details coming soon!')">View Details</button>
         </div>
         """, unsafe_allow_html=True)
 
@@ -713,11 +556,6 @@ with col1:
                 <p>📘 Facebook: @changeuttarakhand</p>
                 <p>📷 Instagram: @changeuttarakhand</p>
                 <p>🎬 YouTube: CHANGE Uttarakhand</p>
-            </div>
-            
-            <div style="margin-top: 2rem; background: #f8f9fa; padding: 1.5rem; border-radius: 10px;">
-                <h4>🏛️ Registered Under</h4>
-                <p>Uttarakhand Autonomous Cooperative Act, 2003</p>
             </div>
         </div>
     </div>
@@ -749,75 +587,22 @@ with col2:
                 We have received your inquiry and our team will get back to you within 24 hours. 
                 Together, we can create sustainable change in Uttarakhand!
                 """)
-                
-                # Show confirmation details
-                st.info(f"""
-                **Submission Details:**
-                - Name: {name}
-                - Email: {email}
-                - Interest: {interest}
-                - Status: ✅ Received
-                - Response Time: 24 hours
-                """)
             else:
                 st.error("Please fill in all required fields (*)")
 
 # Footer
-st.markdown("""
+st.markdown(f"""
 <div class="footer">
     <div style="text-align: center;">
         <div class="logo-container" style="justify-content: center; margin-bottom: 1rem;">
-            <img src="data:image/svg+xml;base64,{}" class="logo-img" alt="CHANGE Logo">
+            <img src="data:image/svg+xml;base64,{logo_base64}" class="logo-img" alt="CHANGE Logo">
             <h3 style="color: white; margin: 0; font-size: 2rem;">🌿 CHANGE Cooperative</h3>
         </div>
         <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 2rem;">Empowering Rural Uttarakhand through Sustainable Development</p>
         
-        <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap;">
-            <button class="nav-btn" onclick="scrollToSection('home')">Home</button>
-            <button class="nav-btn" onclick="scrollToSection('about')">About</button>
-            <button class="nav-btn" onclick="scrollToSection('programs')">Programs</button>
-            <button class="nav-btn" onclick="scrollToSection('contact')">Contact</button>
-        </div>
-        
         <div style="margin-top: 2rem; opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 2rem;">
             <p>© 2024 CHANGE - Centre for Himalaya Agriculture and Nature Group of Environment. All rights reserved.</p>
-            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Building a sustainable future for Uttarakhand, one community at a time.</p>
         </div>
     </div>
 </div>
-""".format(logo_base64), unsafe_allow_html=True)
-
-# SEO Meta Tags
-st.markdown("""
-<!-- SEO Meta Tags -->
-<meta name="description" content="CHANGE Uttarakhand - Sustainable agriculture, environmental conservation, and community empowerment in the Himalayas. Organic farming, AI climate solutions, rural development.">
-<meta name="keywords" content="Uttarakhand agriculture, sustainable farming, climate change, AI consultant, organic products, rural development, Himalayas, CHANGE cooperative">
-<meta name="author" content="CHANGE Cooperative">
-<meta property="og:title" content="CHANGE Uttarakhand - Sustainable Agriculture & Environment">
-<meta property="og:description" content="Empowering rural communities through sustainable agriculture and environmental conservation in Uttarakhand">
-<meta property="og:type" content="website">
-<!-- Structured Data for SEO -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "CHANGE Uttarakhand",
-  "description": "Centre for Himalaya Agriculture and Nature Group of Environment",
-  "url": "https://change-uttarakhand.streamlit.app",
-  "logo": "data:image/svg+xml;base64,{}",
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Tehri Garhwal",
-    "addressRegion": "Uttarakhand",
-    "postalCode": "249199",
-    "addressCountry": "IN"
-  },
-  "contactPoint": {
-    "@type": "ContactPoint",
-    "telephone": "+91-7668512325",
-    "contactType": "Customer service",
-    "email": "thechangeuttarakhand@gmail.com"
-  }
-}
-</script>
-""".format(logo_base64), unsafe_allow_html=True)
+""", unsafe_allow_html=True)
