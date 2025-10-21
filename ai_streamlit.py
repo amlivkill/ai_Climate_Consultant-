@@ -1,11 +1,8 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+import numpy as np
 from datetime import datetime
-import requests
-from PIL import Image
-import io
 
 # Page Configuration
 st.set_page_config(
@@ -20,54 +17,54 @@ st.markdown("""
 <style>
     /* Main Styles */
     .main {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     }
     
     /* Header Styles */
     .header-container {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
-        padding: 1rem 0;
+        padding: 1.5rem 0;
         border-bottom: 3px solid #2E8B57;
         box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     }
     
     .logo-title {
-        font-size: 2.5rem;
+        font-size: 3rem;
         font-weight: 800;
         background: linear-gradient(45deg, #2E8B57, #3CB371);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-align: center;
         margin: 0;
+        font-family: 'Arial Black', sans-serif;
     }
     
     .tagline {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         color: #666;
         text-align: center;
         font-weight: 300;
         margin-top: 0.5rem;
+        font-style: italic;
     }
     
     /* Hero Section */
     .hero-section {
-        background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
-                    url('https://images.unsplash.com/photo-1545208967-50e8c50d7deb');
-        background-size: cover;
-        background-position: center;
+        background: linear-gradient(135deg, #2E8B57 0%, #3CB371 100%);
         color: white;
-        padding: 6rem 2rem;
+        padding: 5rem 2rem;
         text-align: center;
-        border-radius: 0 0 30px 30px;
-        margin-bottom: 3rem;
+        border-radius: 20px;
+        margin: 2rem 0;
+        box-shadow: 0 10px 30px rgba(46, 139, 87, 0.3);
     }
     
     .hero-title {
         font-size: 3.5rem;
         font-weight: 800;
         margin-bottom: 1rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
     
     .hero-subtitle {
@@ -81,15 +78,17 @@ st.markdown("""
     .feature-card {
         background: white;
         padding: 2rem;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        border-left: 5px solid #2E8B57;
-        transition: transform 0.3s ease;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border-top: 4px solid #2E8B57;
+        transition: all 0.3s ease;
         height: 100%;
+        text-align: center;
     }
     
     .feature-card:hover {
         transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
     }
     
     .stat-card {
@@ -99,6 +98,11 @@ st.markdown("""
         border-radius: 15px;
         text-align: center;
         box-shadow: 0 8px 25px rgba(46, 139, 87, 0.3);
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: scale(1.05);
     }
     
     /* Navigation */
@@ -120,6 +124,7 @@ st.markdown("""
         margin: 0.3rem;
         font-weight: 600;
         transition: all 0.3s ease;
+        cursor: pointer;
     }
     
     .nav-btn:hover {
@@ -131,20 +136,35 @@ st.markdown("""
     .section-header {
         text-align: center;
         margin: 4rem 0 2rem 0;
+        padding: 2rem 0;
     }
     
     .section-title {
-        font-size: 2.5rem;
+        font-size: 2.8rem;
         font-weight: 700;
         color: #2E8B57;
         margin-bottom: 1rem;
+        position: relative;
+    }
+    
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 4px;
+        background: linear-gradient(45deg, #2E8B57, #3CB371);
+        border-radius: 2px;
     }
     
     .section-subtitle {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         color: #666;
-        max-width: 600px;
+        max-width: 700px;
         margin: 0 auto;
+        line-height: 1.6;
     }
     
     /* AI Section */
@@ -154,6 +174,7 @@ st.markdown("""
         padding: 3rem;
         border-radius: 20px;
         margin: 2rem 0;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
     }
     
     /* Climate Alert */
@@ -164,15 +185,38 @@ st.markdown("""
         border-radius: 15px;
         margin: 2rem 0;
         text-align: center;
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
     }
     
     /* Footer */
     .footer {
-        background: #2c3e50;
+        background: linear-gradient(135deg, #2c3e50, #34495e);
         color: white;
         padding: 3rem 0;
         margin-top: 4rem;
-        border-radius: 30px 30px 0 0;
+        border-radius: 20px 20px 0 0;
+    }
+    
+    /* Hindi Text */
+    .hindi-text {
+        font-family: 'Arial Unicode MS', 'Nirmala UI', sans-serif;
+        line-height: 1.8;
+        font-size: 1.1rem;
+    }
+    
+    /* Progress Bar */
+    .progress-container {
+        background: #f0f0f0;
+        border-radius: 10px;
+        margin: 1rem 0;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        background: linear-gradient(45deg, #2E8B57, #3CB371);
+        height: 20px;
+        border-radius: 10px;
+        transition: width 0.5s ease;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -185,10 +229,10 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Navigation
+# Navigation with JavaScript for smooth scrolling
 st.markdown("""
 <div class="nav-container">
-    <div style="display: flex; justify-content: center; flex-wrap: wrap;">
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;">
         <button class="nav-btn" onclick="scrollToSection('home')">🏠 Home</button>
         <button class="nav-btn" onclick="scrollToSection('about')">👥 About</button>
         <button class="nav-btn" onclick="scrollToSection('programs')">🚀 Programs</button>
@@ -209,14 +253,15 @@ function scrollToSection(sectionId) {
 </script>
 """, unsafe_allow_html=True)
 
-# Hero Section
+# Home Section
+st.markdown('<div id="home"></div>', unsafe_allow_html=True)
 st.markdown("""
-<div class="hero-section" id="home">
+<div class="hero-section">
     <h1 class="hero-title">Transforming Rural Uttarakhand</h1>
     <p class="hero-subtitle">Sustainable Agriculture • Environmental Stewardship • Community Empowerment</p>
-    <div style="margin-top: 2rem;">
-        <button class="nav-btn" style="font-size: 1.2rem; padding: 1rem 2rem;" onclick="scrollToSection('about')">Explore Our Mission</button>
-        <button class="nav-btn" style="font-size: 1.2rem; padding: 1rem 2rem; background: rgba(255,255,255,0.2); border: 2px solid white;" onclick="scrollToSection('contact')">Join Our Movement</button>
+    <div style="margin-top: 3rem;">
+        <button class="nav-btn" style="font-size: 1.2rem; padding: 1rem 2rem; margin: 0.5rem;" onclick="scrollToSection('about')">Explore Our Mission</button>
+        <button class="nav-btn" style="font-size: 1.2rem; padding: 1rem 2rem; margin: 0.5rem; background: rgba(255,255,255,0.2); border: 2px solid white;" onclick="scrollToSection('contact')">Join Our Movement</button>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -225,7 +270,7 @@ st.markdown("""
 st.markdown("""
 <div class="section-header">
     <h2 class="section-title">Our Impact in Numbers</h2>
-    <p class="section-subtitle">Creating sustainable change across Uttarakhand</p>
+    <p class="section-subtitle">Creating sustainable change across Uttarakhand through community-driven initiatives</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -234,40 +279,41 @@ col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.markdown("""
     <div class="stat-card">
-        <h3>5,000+</h3>
-        <p>Farmers Empowered</p>
+        <h3 style="font-size: 2.5rem; margin: 0;">5,000+</h3>
+        <p style="font-size: 1.1rem; margin: 0.5rem 0 0 0;">Farmers Empowered</p>
     </div>
     """, unsafe_allow_html=True)
 
 with col2:
     st.markdown("""
     <div class="stat-card">
-        <h3>120+</h3>
-        <p>Organic Villages</p>
+        <h3 style="font-size: 2.5rem; margin: 0;">120+</h3>
+        <p style="font-size: 1.1rem; margin: 0.5rem 0 0 0;">Organic Villages</p>
     </div>
     """, unsafe_allow_html=True)
 
 with col3:
     st.markdown("""
     <div class="stat-card">
-        <h3>15</h3>
-        <p>Cottage Industries</p>
+        <h3 style="font-size: 2.5rem; margin: 0;">15</h3>
+        <p style="font-size: 1.1rem; margin: 0.5rem 0 0 0;">Cottage Industries</p>
     </div>
     """, unsafe_allow_html=True)
 
 with col4:
     st.markdown("""
     <div class="stat-card">
-        <h3>8 MW</h3>
-        <p>Solar Capacity Planned</p>
+        <h3 style="font-size: 2.5rem; margin: 0;">8 MW</h3>
+        <p style="font-size: 1.1rem; margin: 0.5rem 0 0 0;">Solar Capacity Planned</p>
     </div>
     """, unsafe_allow_html=True)
 
 # About Section
+st.markdown('<div id="about"></div>', unsafe_allow_html=True)
 st.markdown("""
-<div class="section-header" id="about">
+<div class="section-header">
     <h2 class="section-title">About CHANGE</h2>
-    <p class="section-subtitle">Empowering communities through sustainable development</p>
+    <p class="section-subtitle">Empowering communities through sustainable development in the Himalayan region</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -276,44 +322,50 @@ col1, col2 = st.columns(2)
 with col1:
     st.markdown("""
     <div class="feature-card">
-        <h3>🌿 Our Mission</h3>
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🌿</div>
+        <h3>Our Mission</h3>
         <p>CHANGE is an autonomous multi-purpose cooperative dedicated to holistic development of Uttarakhand. We work at the intersection of agriculture, environment, enterprise, and equity to transform rural livelihoods.</p>
-        <ul>
-            <li>Sustainable Agriculture Practices</li>
-            <li>Environmental Conservation</li>
-            <li>Community Empowerment</li>
-            <li>Youth Engagement</li>
-        </ul>
+        <div style="text-align: left; margin-top: 1.5rem;">
+            <p>✅ Sustainable Agriculture Practices</p>
+            <p>✅ Environmental Conservation</p>
+            <p>✅ Community Empowerment</p>
+            <p>✅ Youth Engagement</p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
 with col2:
     st.markdown("""
     <div class="feature-card">
-        <h3>🎯 Our Vision</h3>
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🎯</div>
+        <h3>Our Vision</h3>
         <p>To create self-reliant, sustainable rural communities where agriculture is profitable, environment is protected, and youth are empowered to build their futures in their homeland.</p>
-        <div style="background: #f8f9fa; padding: 1rem; border-radius: 10px; margin-top: 1rem;">
+        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-top: 1.5rem;">
             <h4>Core Focus Areas:</h4>
-            <p>• Organic & Natural Farming<br>• Cottage Industries<br>• Renewable Energy<br>• Climate Resilience</p>
+            <p>🌱 Organic & Natural Farming</p>
+            <p>🏭 Cottage Industries</p>
+            <p>⚡ Renewable Energy</p>
+            <p>🌍 Climate Resilience</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
 # Programs Section
+st.markdown('<div id="programs"></div>', unsafe_allow_html=True)
 st.markdown("""
-<div class="section-header" id="programs">
+<div class="section-header">
     <h2 class="section-title">Our Programs & Services</h2>
-    <p class="section-subtitle">Comprehensive solutions for rural development</p>
+    <p class="section-subtitle">Comprehensive solutions for sustainable rural development</p>
 </div>
 """, unsafe_allow_html=True)
 
 programs = [
-    {"icon": "🤝", "title": "Contract Farming", "desc": "Guaranteed buy-back at fair prices with technical support"},
-    {"icon": "📜", "title": "Organic Certification", "desc": "PGS and Organic India certification support"},
-    {"icon": "💰", "title": "Microfinance", "desc": "Financial services for women SHGs and farmers"},
-    {"icon": "👨‍🌾", "title": "Personal Family Farmer", "desc": "Individualized farming enterprise support"},
-    {"icon": "🎓", "title": "Skill Development", "desc": "Training in modern agricultural techniques"},
-    {"icon": "⚡", "title": "Disaster Preparedness", "desc": "Climate resilience and risk management"}
+    {"icon": "🤝", "title": "Contract Farming", "desc": "Guaranteed buy-back at fair prices with technical support and market linkage"},
+    {"icon": "📜", "title": "Organic Certification", "desc": "PGS and Organic India certification support for premium market access"},
+    {"icon": "💰", "title": "Microfinance", "desc": "Financial services for women SHGs and farmers with low interest rates"},
+    {"icon": "👨‍🌾", "title": "Personal Family Farmer", "desc": "Individualized farming enterprise support and mentorship"},
+    {"icon": "🎓", "title": "Skill Development", "desc": "Training in modern agricultural techniques and entrepreneurship"},
+    {"icon": "⚡", "title": "Disaster Preparedness", "desc": "Climate resilience training and risk management solutions"}
 ]
 
 cols = st.columns(3)
@@ -321,34 +373,35 @@ for idx, program in enumerate(programs):
     with cols[idx % 3]:
         st.markdown(f"""
         <div class="feature-card">
-            <div style="font-size: 2.5rem; margin-bottom: 1rem;">{program['icon']}</div>
+            <div style="font-size: 3rem; margin-bottom: 1rem;">{program['icon']}</div>
             <h4>{program['title']}</h4>
             <p>{program['desc']}</p>
         </div>
         """, unsafe_allow_html=True)
 
 # AI Consultant Section
+st.markdown('<div id="ai-consultant"></div>', unsafe_allow_html=True)
 st.markdown("""
-<div class="ai-section" id="ai-consultant">
-    <div class="section-header">
+<div class="ai-section">
+    <div class="section-header" style="color: white;">
         <h2 class="section-title" style="color: white;">🤖 AI Climate Consultant</h2>
-        <p class="section-subtitle" style="color: rgba(255,255,255,0.9);">Advanced AI solutions for climate resilience</p>
+        <p class="section-subtitle" style="color: rgba(255,255,255,0.9);">Advanced AI solutions for climate resilience and sustainable agriculture</p>
     </div>
     
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
-        <div style="background: rgba(255,255,255,0.1); padding: 2rem; border-radius: 15px; backdrop-filter: blur(10px);">
+        <div style="background: rgba(255,255,255,0.15); padding: 2rem; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
             <h4>🌦️ Climate Risk Forecasting</h4>
-            <p>Real-time weather predictions and early warning systems for floods, landslides, and extreme weather events.</p>
+            <p>Real-time weather predictions and early warning systems for floods, landslides, and extreme weather events using AI algorithms.</p>
         </div>
         
-        <div style="background: rgba(255,255,255,0.1); padding: 2rem; border-radius: 15px; backdrop-filter: blur(10px);">
+        <div style="background: rgba(255,255,255,0.15); padding: 2rem; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
             <h4>🌱 Smart Farming Solutions</h4>
-            <p>AI-powered crop recommendations, soil health analysis, and precision agriculture techniques.</p>
+            <p>AI-powered crop recommendations, soil health analysis, and precision agriculture techniques for optimal yield.</p>
         </div>
         
-        <div style="background: rgba(255,255,255,0.1); padding: 2rem; border-radius: 15px; backdrop-filter: blur(10px);">
+        <div style="background: rgba(255,255,255,0.15); padding: 2rem; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
             <h4>💰 Carbon Credit Management</h4>
-            <p>Automated MRV systems for carbon credit generation and international market access.</p>
+            <p>Automated MRV systems for carbon credit generation and international market access with blockchain technology.</p>
         </div>
     </div>
 </div>
@@ -358,117 +411,213 @@ st.markdown("""
 st.markdown("""
 <div class="section-header">
     <h2 class="section-title">AI Tools & Calculators</h2>
-    <p class="section-subtitle">Practical solutions for farmers and communities</p>
+    <p class="section-subtitle">Practical AI-powered solutions for farmers and communities</p>
 </div>
 """, unsafe_allow_html=True)
 
 tab1, tab2, tab3 = st.tabs(["🌾 Crop Advisor", "💧 Water Calculator", "💰 Carbon Credits"])
 
 with tab1:
+    st.subheader("AI Crop Recommendation System")
     col1, col2 = st.columns(2)
     with col1:
-        soil_type = st.selectbox("Soil Type", ["Loamy", "Clay", "Sandy", "Mountain Soil"])
+        soil_type = st.selectbox("Soil Type", ["Loamy Soil", "Clay Soil", "Sandy Soil", "Mountain Soil", "Alluvial Soil"])
         rainfall = st.selectbox("Annual Rainfall", ["Low (<500mm)", "Medium (500-1000mm)", "High (>1000mm)"])
     with col2:
-        altitude = st.selectbox("Altitude", ["Lowland (<1000m)", "Mid-altitude (1000-2000m)", "Highland (>2000m)"])
-        season = st.selectbox("Season", ["Kharif", "Rabi", "Zaid"])
+        altitude = st.selectbox("Altitude Zone", ["Lowland (<1000m)", "Mid-altitude (1000-2000m)", "Highland (>2000m)"])
+        season = st.selectbox("Growing Season", ["Kharif (Monsoon)", "Rabi (Winter)", "Zaid (Summer)", "Annual"])
     
-    if st.button("Get Crop Recommendations", use_container_width=True):
+    if st.button("Get AI Crop Recommendations", use_container_width=True):
         st.success("""
-        **Recommended Crops:**
-        - Manduwa (Finger Millet)
-        - Jhangora (Barnyard Millet)
-        - Rajma (Kidney Beans)
-        - Organic Vegetables
+        **🤖 AI Recommended Crops:**
         
-        **Advisory:** Use organic manure and practice crop rotation
+        **Primary Crops:**
+        • Manduwa (Finger Millet) - High nutrition value
+        • Jhangora (Barnyard Millet) - Drought resistant
+        • Rajma (Kidney Beans) - Good market demand
+        
+        **Secondary Crops:**
+        • Organic Vegetables - For local markets
+        • Medicinal Herbs - High value addition
+        
+        **💡 AI Advisory:**
+        - Use organic manure and practice crop rotation
+        - Implement drip irrigation for water efficiency
+        - Consider intercropping with legumes
         """)
 
 with tab2:
+    st.subheader("Smart Water Management Calculator")
     col1, col2 = st.columns(2)
     with col1:
-        crop_area = st.number_input("Crop Area (hectares)", min_value=0.1, value=2.0)
-        crop_type = st.selectbox("Crop Type", ["Cereals", "Pulses", "Vegetables", "Fruits"])
+        crop_area = st.number_input("Crop Area (hectares)", min_value=0.1, value=2.0, step=0.1)
+        crop_type = st.selectbox("Crop Type", ["Cereals (Rice/Wheat)", "Millets", "Pulses", "Vegetables", "Fruits", "Spices"])
     with col2:
-        irrigation_type = st.selectbox("Irrigation Type", ["Flood", "Drip", "Sprinkler", "Traditional"])
-        soil_moisture = st.slider("Soil Moisture Level", 0, 100, 50)
+        irrigation_type = st.selectbox("Irrigation System", ["Flood Irrigation", "Drip Irrigation", "Sprinkler System", "Traditional Methods"])
+        soil_moisture = st.slider("Current Soil Moisture Level (%)", 0, 100, 50)
     
-    if st.button("Calculate Water Savings", use_container_width=True):
-        water_saved = crop_area * 1500
-        st.success(f"💧 Potential water savings: {water_saved:,.0f} liters per day")
-        st.info("Switch to drip irrigation for maximum efficiency")
+    if st.button("Calculate Water Optimization", use_container_width=True):
+        # Simple calculation for demonstration
+        base_water = crop_area * 1500
+        if irrigation_type == "Drip Irrigation":
+            water_saved = base_water * 0.4
+            efficiency = "High (40% savings)"
+        elif irrigation_type == "Sprinkler System":
+            water_saved = base_water * 0.25
+            efficiency = "Medium (25% savings)"
+        else:
+            water_saved = base_water * 0.1
+            efficiency = "Low (10% savings)"
+        
+        st.success(f"💧 **Water Optimization Results:**")
+        st.metric("Current Water Usage", f"{base_water:,.0f} liters/day")
+        st.metric("Potential Savings", f"{water_saved:,.0f} liters/day")
+        st.metric("System Efficiency", efficiency)
+        
+        st.info("""
+        **💡 AI Recommendations:**
+        - Switch to drip irrigation for maximum efficiency
+        - Install soil moisture sensors
+        - Implement rainwater harvesting
+        - Use mulching to reduce evaporation
+        """)
 
 with tab3:
-    st.info("Calculate your potential carbon credit earnings")
+    st.subheader("Carbon Credit Income Calculator")
+    st.info("Calculate your potential earnings from carbon farming")
+    
     col1, col2 = st.columns(2)
     with col1:
-        land_area = st.number_input("Land Area (hectares)", min_value=0.1, value=5.0)
-        farming_practice = st.selectbox("Farming Practice", ["Organic", "Traditional", "Agroforestry", "Conservation Agriculture"])
+        land_area = st.number_input("Land Area (hectares)", min_value=0.1, value=5.0, step=0.5)
+        farming_practice = st.selectbox("Current Farming Practice", 
+                                      ["Conventional Farming", "Organic Farming", "Conservation Agriculture", "Agroforestry", "Natural Farming"])
     with col2:
-        trees_planted = st.number_input("Trees Planted", min_value=0, value=100)
+        trees_planted = st.number_input("Number of Trees Planted", min_value=0, value=100)
         practice_years = st.number_input("Years of Sustainable Practice", min_value=1, value=3)
     
-    if st.button("Estimate Carbon Credits", use_container_width=True):
-        credits = land_area * 2 + trees_planted * 0.1
-        income = credits * 15  # $15 per credit
-        st.success(f"💰 Estimated annual carbon credit income: ${income:,.0f}")
-        st.metric("Carbon Credits Generated", f"{credits:.1f} tCO2e")
+    if st.button("Estimate Carbon Credit Income", use_container_width=True):
+        # Simple carbon credit calculation
+        base_credits = land_area * 2  # 2 credits per hectare
+        tree_credits = trees_planted * 0.1  # 0.1 credits per tree
+        practice_bonus = practice_years * 0.5  # Bonus for sustained practice
+        
+        total_credits = base_credits + tree_credits + practice_bonus
+        income = total_credits * 15  # $15 per credit
+        
+        st.success(f"💰 **Carbon Credit Analysis:**")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Carbon Credits", f"{total_credits:.1f} tCO2e")
+        with col2:
+            st.metric("Annual Income", f"${income:,.0f}")
+        with col3:
+            st.metric("Credit Value", "$15/credit")
+        
+        st.info("""
+        **🌿 How to Increase Carbon Credits:**
+        - Plant more native trees
+        - Practice no-till farming
+        - Use organic manure
+        - Implement crop rotation
+        - Maintain soil cover
+        """)
 
 # Climate Section
+st.markdown('<div id="climate"></div>', unsafe_allow_html=True)
 st.markdown("""
-<div class="climate-alert" id="climate">
-    <h3>🚨 Uttarakhand Climate Emergency</h3>
-    <p><strong>2025 Data:</strong> 2,199+ disaster events | 260+ fatalities | 65% extreme weather days</p>
-    <p>Immediate AI-powered solutions needed for climate resilience</p>
+<div class="climate-alert">
+    <h3 style="font-size: 2rem; margin-bottom: 1rem;">🚨 Uttarakhand Climate Emergency</h3>
+    <p style="font-size: 1.2rem; margin-bottom: 0.5rem;"><strong>2025 Data:</strong> 2,199+ disaster events | 260+ fatalities | 65% extreme weather days</p>
+    <p style="font-size: 1.1rem; margin: 0;">Immediate AI-powered solutions needed for climate resilience in Himalayan region</p>
 </div>
 """, unsafe_allow_html=True)
 
-# Climate Statistics
+# Climate Statistics with Matplotlib
 st.markdown("""
 <div class="section-header">
     <h2 class="section-title">Climate Impact Analysis</h2>
-    <p class="section-subtitle">Understanding Uttarakhand's environmental challenges</p>
+    <p class="section-subtitle">Understanding Uttarakhand's environmental challenges through data</p>
 </div>
 """, unsafe_allow_html=True)
 
 # Create sample data for visualization
-climate_data = pd.DataFrame({
-    'Disaster Type': ['Cloudburst', 'Landslide', 'Floods', 'Others'],
-    'Events': [700, 1034, 300, 165],
-    'Impact Score': [85, 90, 75, 40]
-})
+climate_data = {
+    'Disaster Type': ['Cloudburst', 'Landslide', 'Floods', 'Drought', 'Others'],
+    'Events': [700, 1034, 300, 100, 65],
+    'Impact Score': [85, 90, 75, 60, 40]
+}
+
+df_climate = pd.DataFrame(climate_data)
 
 col1, col2 = st.columns(2)
 
 with col1:
-    fig = px.pie(climate_data, values='Events', names='Disaster Type', 
-                 title='Disaster Distribution 2025',
-                 color_discrete_sequence=px.colors.sequential.Emrld)
-    fig.update_traces(textposition='inside', textinfo='percent+label')
-    st.plotly_chart(fig, use_container_width=True)
+    st.subheader("Disaster Distribution 2025")
+    fig, ax = plt.subplots(figsize=(8, 6))
+    colors = ['#ff6b6b', '#ffa726', '#42a5f5', '#66bb6a', '#ba68c8']
+    wedges, texts, autotexts = ax.pie(df_climate['Events'], labels=df_climate['Disaster Type'], 
+                                     autopct='%1.1f%%', colors=colors, startangle=90)
+    
+    for autotext in autotexts:
+        autotext.set_color('white')
+        autotext.set_fontweight('bold')
+    
+    ax.set_title('Disaster Events Distribution', fontsize=14, fontweight='bold', pad=20)
+    st.pyplot(fig)
 
 with col2:
-    fig2 = px.bar(climate_data, x='Disaster Type', y='Impact Score',
-                  title='Impact Severity Analysis',
-                  color='Impact Score',
-                  color_continuous_scale='Viridis')
-    st.plotly_chart(fig2, use_container_width=True)
+    st.subheader("Impact Severity Analysis")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    bars = ax.barh(df_climate['Disaster Type'], df_climate['Impact Score'], 
+                   color=colors, alpha=0.8)
+    
+    # Add value labels on bars
+    for bar, value in zip(bars, df_climate['Impact Score']):
+        ax.text(bar.get_width() + 1, bar.get_y() + bar.get_height()/2, 
+                f'{value}%', va='center', fontweight='bold')
+    
+    ax.set_xlabel('Impact Score (%)', fontweight='bold')
+    ax.set_title('Disaster Impact Severity', fontsize=14, fontweight='bold', pad=20)
+    ax.grid(axis='x', alpha=0.3)
+    st.pyplot(fig)
+
+# Progress Bars for Climate Metrics
+st.subheader("Climate Risk Metrics")
+metrics = [
+    {"name": "Extreme Weather Days", "value": 65, "max": 100},
+    {"name": "Disaster Frequency", "value": 75, "max": 100},
+    {"name": "Community Preparedness", "value": 40, "max": 100},
+    {"name": "Infrastructure Resilience", "value": 35, "max": 100}
+]
+
+for metric in metrics:
+    st.write(f"**{metric['name']}**")
+    progress = (metric['value'] / metric['max']) * 100
+    st.markdown(f"""
+    <div class="progress-container">
+        <div class="progress-bar" style="width: {progress}%"></div>
+    </div>
+    <div style="text-align: right; margin-top: 5px; color: #666;">
+        {metric['value']}%
+    </div>
+    """, unsafe_allow_html=True)
 
 # Products Section
+st.markdown('<div id="products"></div>', unsafe_allow_html=True)
 st.markdown("""
-<div class="section-header" id="products">
+<div class="section-header">
     <h2 class="section-title">Our Organic Products</h2>
     <p class="section-subtitle">Pure Himalayan goodness from our farms to your home</p>
 </div>
 """, unsafe_allow_html=True)
 
 products = [
-    {"name": "Organic Millets", "category": "Shri Anna", "features": ["GI Certified", "Rich in Nutrients"]},
-    {"name": "Himalayan Herbs", "category": "Medicinal Plants", "features": ["Ayurvedic", "Wild Harvested"]},
-    {"name": "Aroma Oils", "category": "Essential Oils", "features": ["Pure Extract", "Therapeutic"]},
-    {"name": "Vegan Products", "category": "Plant-based", "features": ["Cruelty-free", "Sustainable"]},
-    {"name": "Natural Preserves", "category": "Jams & Pickles", "features": ["No Preservatives", "Traditional Recipes"]},
-    {"name": "Puja Materials", "category": "Religious", "features": ["Natural", "Eco-friendly"]}
+    {"name": "Organic Millets", "category": "Shri Anna", "features": ["GI Certified", "Rich in Nutrients", "Traditional Varieties"], "icon": "🌾"},
+    {"name": "Himalayan Herbs", "category": "Medicinal Plants", "features": ["Ayurvedic", "Wild Harvested", "Therapeutic"], "icon": "🌿"},
+    {"name": "Aroma Oils", "category": "Essential Oils", "features": ["Pure Extract", "Therapeutic", "Natural"], "icon": "💧"},
+    {"name": "Vegan Products", "category": "Plant-based", "features": ["Cruelty-free", "Sustainable", "Healthy"], "icon": "🌱"},
+    {"name": "Natural Preserves", "category": "Jams & Pickles", "features": ["No Preservatives", "Traditional Recipes", "Homemade"], "icon": "🍯"},
+    {"name": "Puja Materials", "category": "Religious", "features": ["Natural", "Eco-friendly", "Traditional"], "icon": "🪔"}
 ]
 
 cols = st.columns(3)
@@ -476,19 +625,22 @@ for idx, product in enumerate(products):
     with cols[idx % 3]:
         st.markdown(f"""
         <div class="feature-card">
-            <h4>🌿 {product['name']}</h4>
+            <div style="font-size: 3rem; margin-bottom: 1rem;">{product['icon']}</div>
+            <h4>{product['name']}</h4>
             <p><strong>Category:</strong> {product['category']}</p>
-            <div style="margin-top: 1rem;">
-                {' '.join([f'<span style="background: #2E8B57; color: white; padding: 0.2rem 0.5rem; border-radius: 15px; font-size: 0.8rem; margin-right: 0.5rem;">{feature}</span>' for feature in product['features']])}
+            <div style="margin-top: 1rem; text-align: left;">
+                {' '.join([f'<span style="background: #2E8B57; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; margin: 0.2rem; display: inline-block;">{feature}</span>' for feature in product['features']])}
             </div>
+            <button class="nav-btn" style="margin-top: 1.5rem; width: 100%;" onclick="alert('{product['name']} details coming soon!')">View Details</button>
         </div>
         """, unsafe_allow_html=True)
 
 # Contact Section
+st.markdown('<div id="contact"></div>', unsafe_allow_html=True)
 st.markdown("""
-<div class="section-header" id="contact">
+<div class="section-header">
     <h2 class="section-title">Get Involved</h2>
-    <p class="section-subtitle">Join our movement for sustainable development</p>
+    <p class="section-subtitle">Join our movement for sustainable development in Uttarakhand</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -498,15 +650,22 @@ with col1:
     st.markdown("""
     <div class="feature-card">
         <h3>📞 Contact Information</h3>
-        <p><strong>Email:</strong> thechangeuttarakhand@gmail.com</p>
-        <p><strong>Phone:</strong> +91-7668512325</p>
-        <p><strong>Address:</strong> Village Badshahi Thaul, Tehri Garhwal, Uttarakhand</p>
-        
-        <div style="margin-top: 2rem;">
-            <h4>Follow Us</h4>
-            <p>📱 Facebook: @changeuttarakhand</p>
-            <p>📸 Instagram: @changeuttarakhand</p>
-            <p>🎬 YouTube: CHANGE Uttarakhand</p>
+        <div style="text-align: left; margin-top: 1.5rem;">
+            <p><strong>📧 Email:</strong> thechangeuttarakhand@gmail.com</p>
+            <p><strong>📱 Phone:</strong> +91-7668512325</p>
+            <p><strong>🏠 Address:</strong> Village Badshahi Thaul, Tehri Garhwal, Uttarakhand - 249199</p>
+            
+            <div style="margin-top: 2rem;">
+                <h4>🌐 Follow Us</h4>
+                <p>📘 Facebook: @changeuttarakhand</p>
+                <p>📷 Instagram: @changeuttarakhand</p>
+                <p>🎬 YouTube: CHANGE Uttarakhand</p>
+            </div>
+            
+            <div style="margin-top: 2rem; background: #f8f9fa; padding: 1.5rem; border-radius: 10px;">
+                <h4>🏛️ Registered Under</h4>
+                <p>Uttarakhand Autonomous Cooperative Act, 2003</p>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -514,36 +673,68 @@ with col1:
 with col2:
     with st.form("contact_form"):
         st.subheader("Send us a Message")
-        name = st.text_input("Full Name")
-        email = st.text_input("Email")
-        phone = st.text_input("Phone")
-        interest = st.selectbox("Area of Interest", [
-            "Membership", "Volunteering", "Partnership", "Products", "AI Consultation", "Other"
-        ])
-        message = st.text_area("Message")
         
-        submitted = st.form_submit_button("Send Message", use_container_width=True)
+        name = st.text_input("Full Name *", placeholder="Enter your full name")
+        email = st.text_input("Email Address *", placeholder="Enter your email")
+        phone = st.text_input("Phone Number", placeholder="Enter your phone number")
+        
+        interest = st.selectbox("Area of Interest *", [
+            "Select your interest", "Membership", "Volunteering", "Partnership", 
+            "Product Information", "AI Consultation", "Training Programs", "Other"
+        ])
+        
+        message = st.text_area("Your Message *", 
+                             placeholder="Tell us how you'd like to get involved...",
+                             height=120)
+        
+        submitted = st.form_submit_button("Send Message 📨", use_container_width=True)
         if submitted:
-            st.success("Thank you for your message! We'll get back to you within 24 hours.")
+            if name and email and interest != "Select your interest" and message:
+                st.success("""
+                ✅ **Thank you for your message!** 
+                
+                We have received your inquiry and our team will get back to you within 24 hours. 
+                Together, we can create sustainable change in Uttarakhand!
+                """)
+                
+                # Show confirmation details
+                st.info(f"""
+                **Submission Details:**
+                - Name: {name}
+                - Email: {email}
+                - Interest: {interest}
+                - Status: ✅ Received
+                - Response Time: 24 hours
+                """)
+            else:
+                st.error("Please fill in all required fields (*)")
 
 # Footer
 st.markdown("""
 <div class="footer">
     <div style="text-align: center;">
-        <h3 style="color: white; margin-bottom: 1rem;">🌿 CHANGE Cooperative</h3>
-        <p style="opacity: 0.8;">Empowering Rural Uttarakhand through Sustainable Development</p>
-        <div style="margin-top: 2rem; opacity: 0.6;">
-            <p>Registered under Uttarakhand Autonomous Cooperative Act, 2003</p>
+        <h3 style="color: white; margin-bottom: 1rem; font-size: 2rem;">🌿 CHANGE Cooperative</h3>
+        <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 2rem;">Empowering Rural Uttarakhand through Sustainable Development</p>
+        
+        <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap;">
+            <button class="nav-btn" onclick="scrollToSection('home')">Home</button>
+            <button class="nav-btn" onclick="scrollToSection('about')">About</button>
+            <button class="nav-btn" onclick="scrollToSection('programs')">Programs</button>
+            <button class="nav-btn" onclick="scrollToSection('contact')">Contact</button>
+        </div>
+        
+        <div style="margin-top: 2rem; opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 2rem;">
             <p>© 2024 CHANGE - Centre for Himalaya Agriculture and Nature Group of Environment. All rights reserved.</p>
+            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Building a sustainable future for Uttarakhand, one community at a time.</p>
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# SEO Meta Tags (for when deployed as proper website)
+# SEO Meta Tags
 st.markdown("""
 <!-- SEO Meta Tags -->
 <meta name="description" content="CHANGE Uttarakhand - Sustainable agriculture, environmental conservation, and community empowerment in the Himalayas. Organic farming, AI climate solutions, rural development.">
-<meta name="keywords" content="Uttarakhand agriculture, sustainable farming, climate change, AI consultant, organic products, rural development, Himalayas">
+<meta name="keywords" content="Uttarakhand agriculture, sustainable farming, climate change, AI consultant, organic products, rural development, Himalayas, CHANGE cooperative">
 <meta name="author" content="CHANGE Cooperative">
 """, unsafe_allow_html=True)
